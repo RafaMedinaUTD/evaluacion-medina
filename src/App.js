@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Descargas from './Descargas'; // Importamos el archivo que acabas de crear
+import Descargas from './Descargas'; // Mantenemos Parcial 1
+import Documentacion2 from './Documentacion2'; // IMPORTAMOS EL NUEVO ARCHIVO
 import logo from './logo.JPG'; // Tu logo original
 import './App.css'; // Tus estilos originales
 
@@ -24,13 +25,22 @@ function Home() {
           LINKED IN DE MI PROFILE
         </a>
         
-        {/* Enlace que lleva al archivo Descargas.js */}
+        {/* Enlace original a Parcial 1 */}
         <Link
           className="App-link"
           to="/descargas"
           style={{ marginTop: '10px' }}
         >
           DOCUMENTACION PARCIAL 1
+        </Link>
+
+        {/* --- ENLACE NUEVO A PARCIAL 2 --- */}
+        <Link
+          className="App-link"
+          to="/documentacion2"
+          style={{ marginTop: '10px' }}
+        >
+          DOCUMENTACION PARCIAL 2
         </Link>
       </header>
     </div>
@@ -45,8 +55,11 @@ function App() {
         {/* Ruta Principal: Tu Perfil */}
         <Route path="/" element={<Home />} />
         
-        {/* Ruta Secundaria: El archivo nuevo Descargas.js */}
+        {/* Ruta Parcial 1: Descargas PDFs */}
         <Route path="/descargas" element={<Descargas />} />
+
+        {/* --- NUEVA RUTA PARCIAL 2: Menú de Imágenes --- */}
+        <Route path="/documentacion2" element={<Documentacion2 />} />
       </Routes>
     </Router>
   );
