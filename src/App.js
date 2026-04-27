@@ -1,236 +1,186 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Descargas from './Descargas';
 import Documentacion2 from './Documentacion2';
-import logo from './logo.JPG'; // Usamos tu logo original como imagen por defecto
+import logo from './logo.JPG';
 import './App.css';
 
-// Decodificar token JWT de Google
-function parseJwt(token) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    console.error("Error decodificando token:", error);
-    return null;
-  }
-}
-
-// Layout común después del login
-function Layout({ children, user, onLogout }) {
+// --- COMPONENTE DE INICIO (TU PERFIL) ---
+function Home({ user, onLogout }) {
   return (
     <div className="App">
-      <header style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '10px 30px',
-        backgroundColor: '#282c34',
-        color: 'white',
-        borderBottom: '1px solid #61dafb'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <img 
-            src={user?.picture || logo}  // Si no hay foto de Google, usa el logo
-            alt="avatar" 
-            style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }}
-          />
-          <div>
-            <strong>{user?.name || 'Usuario'}</strong><br />
-            <small>{user?.email || ''}</small>
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" style={{ height: '350px', marginBottom: '20px' }} />
+        
+        <h1>Evaluación Parcial 1</h1>
+        <h3>Alumno(a): Rafael Abraham Castañeda Medina</h3>
+        
+        {user && (
+          <div style={{ marginBottom: '15px' }}>
+            <p>✅ Conectado como: <strong>{user.name}</strong> ({user.email})</p>
+            <button onClick={onLogout} style={{ marginTop: '5px', padding: '5px 10px' }}>
+              Cerrar sesión
+            </button>
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <Link to="/" style={{ color: '#61dafb', textDecoration: 'none' }}>INICIO</Link>
-          <Link to="/descargas" style={{ color: '#61dafb', textDecoration: 'none' }}>PARCIAL 1</Link>
-          <Link to="/documentacion2" style={{ color: '#61dafb', textDecoration: 'none' }}>PARCIAL 2</Link>
-        </div>
-        <button onClick={onLogout} style={{
-          padding: '8px 16px',
-          backgroundColor: '#dc3545',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}>
-          CERRAR SESIÓN
-        </button>
+        )}
+        
+        <a
+          className="App-link"
+          href="https://www.linkedin.com/in/rafael-abraham-casta%C3%B1eda-medina-b605093a4?trk=contact-info&authuser=1"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ marginBottom: '15px', marginTop: '10px' }}
+        >
+          LINKED IN DE MI PROFILE
+        </a>
+        
+        <Link className="App-link" to="/descargas" style={{ marginTop: '10px' }}>
+          DOCUMENTACION PARCIAL 1
+        </Link>
+
+        <Link className="App-link" to="/documentacion2" style={{ marginTop: '10px' }}>
+          DOCUMENTACION PARCIAL 2
+        </Link>
       </header>
-      <main style={{ padding: '20px' }}>
-        {children}
-      </main>
     </div>
   );
 }
 
-// Página de inicio / Dashboard después del login
-function DashboardHome({ user }) {
-  const handleJiraRedirect = () => {
-    window.open("https://ingreyeslara.atlassian.net/jira/software/projects/SIB/boards/445?atlOrigin=eyJpIjoiMDEyNjU0MzMzYjgxNDFlYTg0MTRjNjMyNDllNmNjZmYiLCJwIjoiaiJ9", "_blank", "noopener,noreferrer");
+// --- PANTALLA DE LOGIN ---
+function LoginScreen({ onLoginSuccess }) {
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+
+  useEffect(() => {
+    // Cargar la librería de Google Identity Services
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setIsScriptLoaded(true);
+    document.body.appendChild(script);
+
+    return () => {
+      // Limpieza opcional (no eliminar el script porque podría afectar otras cosas)
+    };
+  }, []);
+
+  const handleGoogleLogin = () => {
+    if (!window.google) {
+      alert('La librería de Google aún no se ha cargado. Intenta de nuevo.');
+      return;
+    }
+
+    const clientId = '362434163876-3mnfsvo80fta2eivk97s82nr51hal8t5.apps.googleusercontent.com'; 
+
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: 'email profile',
+      callback: (tokenResponse) => {
+        if (tokenResponse.access_token) {
+          // Obtener info del usuario usando el access_token
+          fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+          })
+            .then(res => res.json())
+            .then(userInfo => {
+              onLoginSuccess({
+                name: userInfo.name,
+                email: userInfo.email,
+                picture: userInfo.picture
+              });
+            })
+            .catch(err => console.error('Error al obtener perfil:', err));
+        }
+      },
+    });
+
+    client.requestAccessToken();
   };
 
   return (
-    <div className="App-header" style={{ textAlign: 'center' }}>
-      <img src={logo} className="App-logo" alt="logo" style={{ height: '200px', marginBottom: '20px' }} />
-      
-      <h1>Evaluación Parcial 3</h1>
-      <h3>Bienvenido(a), {user?.name || 'Alumno'}</h3>
-      
-      <a
-        className="App-link"
-        href="https://www.linkedin.com/in/rafael-abraham-casta%C3%B1eda-medina-b605093a4?trk=contact-info&authuser=1"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginBottom: '15px', display: 'inline-block' }}
-      >
-        LINKEDIN DE MI PERFIL
-      </a>
-
-      <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap', margin: '30px 0' }}>
-        <Link to="/descargas" className="App-link" style={{ textDecoration: 'none' }}>
-          <button style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#282c34', color: 'white', border: '1px solid #61dafb', borderRadius: '8px', cursor: 'pointer' }}>
-            📄 DOCUMENTACIÓN PARCIAL 1
-          </button>
-        </Link>
+    <div className="App">
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" style={{ height: '350px', marginBottom: '20px' }} />
+        <h1>Evaluación Parcial 1</h1>
+        <h3>Alumno(a): Rafael Abraham Castañeda Medina</h3>
         
-        <Link to="/documentacion2" className="App-link" style={{ textDecoration: 'none' }}>
-          <button style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#282c34', color: 'white', border: '1px solid #61dafb', borderRadius: '8px', cursor: 'pointer' }}>
-            📑 DOCUMENTACIÓN PARCIAL 2
-          </button>
-        </Link>
-      </div>
-
-      <div style={{ margin: '20px 0' }}>
-        <a 
-          href="https://www.medikt.com.mx/practicas/ers.pdf" 
-          download="ERS_Proyecto.pdf"
-          style={{ textDecoration: 'none' }}
+        <a
+          className="App-link"
+          href="https://www.linkedin.com/in/rafael-abraham-casta%C3%B1eda-medina-b605093a4?trk=contact-info&authuser=1"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ marginBottom: '15px', marginTop: '10px' }}
         >
-          <button style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-            ⬇️ DESCARGAR DOCUMENTO ERS DEL PROYECTO
-          </button>
+          LINKED IN DE MI PROFILE
         </a>
-      </div>
-
-      <div style={{ margin: '20px 0' }}>
-        <button 
-          onClick={handleJiraRedirect}
-          style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#0052cc', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-        >
-          🎯 TABLERO JIRA PROYECTO SIBA
-        </button>
-      </div>
+        
+        {/* Botón moderno de Google (puedes usar un div estilizado) */}
+        <div style={{ marginTop: '20px' }}>
+          <button
+            onClick={handleGoogleLogin}
+            disabled={!isScriptLoaded}
+            style={{
+              backgroundColor: '#4285f4',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '4px',
+              fontSize: '16px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              margin: '0 auto'
+            }}
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '20px' }} />
+            Iniciar sesión con Google
+          </button>
+          <p style={{ fontSize: '12px', marginTop: '10px' }}>
+            {!isScriptLoaded ? 'Cargando...' : 'Haz clic para acceder'}
+          </p>
+        </div>
+      </header>
     </div>
   );
 }
 
-// Componente principal
-function AppContent() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userData, setUserData] = useState(null);
+// --- APP PRINCIPAL CON RUTAS Y LOGIN ---
+function App() {
+  const [user, setUser] = useState(null);
 
-  const clientId = "941946385897-fg0819kmq26rhoj75giiq6v9lupbcsp4.apps.googleusercontent.com"; // Cámbialo si es necesario
-
-  const onSuccess = (response) => {
-    console.log("Login exitoso", response);
-    if (response.credential) {
-      const decoded = parseJwt(response.credential);
-      if (decoded) {
-        setUserData({
-          name: decoded.name,
-          email: decoded.email,
-          picture: decoded.picture
-        });
-        setIsLoggedIn(true);
-      } else {
-        setUserData({ name: "Rafael Abraham", email: "alumno@ejemplo.com", picture: null });
-        setIsLoggedIn(true);
-      }
+  // Verificar si ya hay sesión guardada en localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem('google_user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
     }
-  };
+  }, []);
 
-  const onError = () => {
-    console.log("Error en login de Google");
-    alert("No se pudo iniciar sesión. Intenta de nuevo.");
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    localStorage.setItem('google_user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserData(null);
+    setUser(null);
+    localStorage.removeItem('google_user');
+    // Opcional: también revocar token si se quiere
   };
 
   return (
-    <GoogleOAuthProvider clientId={clientId}>
-      <Router>
-        {!isLoggedIn ? (
-          <div className="App">
-            <header className="App-header">
-              <div>
-                <img src={logo} width="30%" alt="perfil" />
-              </div>
-              <h1>ANÁLISIS Y DISEÑO DE SOFTWARE</h1>
-              <h2>Alumno(a): Rafael Abraham Castañeda Medina</h2>
-
-              <a
-                className="App-link"
-                href="https://www.linkedin.com/in/rafael-abraham-casta%C3%B1eda-medina-b605093a4?trk=contact-info&authuser=1"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                LINKEDIN DE MI PERFIL
-              </a>
-              <br />
-              <a
-                className="App-link"
-                href="https://www.medikt.com.mx/practicas/documentacion.html"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                DOCUMENTACIÓN PARCIAL 1 (externa)
-              </a>
-              <br />
-              <a
-                className="App-link"
-                href="https://www.medikt.com.mx/practicas/parcial_2.html"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                DOCUMENTACIÓN PARCIAL 2 (externa)
-              </a>
-
-              <div style={{ margin: '30px' }}>
-                <GoogleLogin
-                  onSuccess={onSuccess}
-                  onError={onError}
-                  useOneTap
-                  theme="outline"
-                  shape="rectangular"
-                />
-              </div>
-            </header>
-          </div>
-        ) : (
-          <Layout user={userData} onLogout={handleLogout}>
-            <Routes>
-              <Route path="/" element={<DashboardHome user={userData} />} />
-              <Route path="/descargas" element={<Descargas />} />
-              <Route path="/documentacion2" element={<Documentacion2 />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Layout>
-        )}
-      </Router>
-    </GoogleOAuthProvider>
+    <Router>
+      {!user ? (
+        <LoginScreen onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <Routes>
+          <Route path="/" element={<Home user={user} onLogout={handleLogout} />} />
+          <Route path="/descargas" element={<Descargas />} />
+          <Route path="/documentacion2" element={<Documentacion2 />} />
+        </Routes>
+      )}
+    </Router>
   );
-}
-
-function App() {
-  return <AppContent />;
 }
 
 export default App;
