@@ -25,7 +25,7 @@ function ProyectoFinal() {
         {/* Botón hacia Jira */}
         <a
           className="App-link"
-          href="AQUI_PON_EL_LINK_DE_TU_TABLERO_JIRA"
+          href="https://utd-team-zzukmk8m.atlassian.net/jira/software/projects/MT/boards/67?atlOrigin=eyJpIjoiMjFkMzIyMDgwMzQxNDgwNWIwNGZlNWFhODE3ODZlMGIiLCJwIjoiaiJ9"
           target="_blank"
           rel="noopener noreferrer"
           style={{ marginTop: '15px', padding: '10px', backgroundColor: '#0052CC', borderRadius: '8px', textDecoration: 'none', color: 'white' }}
