@@ -5,6 +5,43 @@ import Documentacion2 from './Documentacion2';
 import logo from './logo.JPG';
 import './App.css';
 
+// --- COMPONENTE DE PROYECTO FINAL ---
+function ProyectoFinal() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h1>Proyecto Final: Peluches</h1>
+        
+        {/* Botón para descargar el PDF desde la carpeta public */}
+        <a
+          className="App-link"
+          href="/Documentacion_ERS.pdf"
+          download="Documentacion_ERS.pdf"
+          style={{ marginTop: '20px', padding: '10px', backgroundColor: '#333', borderRadius: '8px', textDecoration: 'none', color: 'white' }}
+        >
+          📄 Descargar Documentación ERS
+        </a>
+
+        {/* Botón hacia Jira */}
+        <a
+          className="App-link"
+          href="AQUI_PON_EL_LINK_DE_TU_TABLERO_JIRA"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ marginTop: '15px', padding: '10px', backgroundColor: '#0052CC', borderRadius: '8px', textDecoration: 'none', color: 'white' }}
+        >
+          📊 Tablero Jira Proyecto Peluches
+        </a>
+
+        {/* Botón para regresar al inicio */}
+        <Link className="App-link" to="/" style={{ marginTop: '30px', color: '#ff6b6b' }}>
+          ⬅ Regresar
+        </Link>
+      </header>
+    </div>
+  );
+}
+
 // --- COMPONENTE DE INICIO (TU PERFIL) ---
 function Home({ user, onLogout }) {
   return (
@@ -41,6 +78,11 @@ function Home({ user, onLogout }) {
         <Link className="App-link" to="/documentacion2" style={{ marginTop: '10px' }}>
           DOCUMENTACION PARCIAL 2
         </Link>
+
+        {/* NUEVO BOTÓN PROYECTO FINAL */}
+        <Link className="App-link" to="/proyectofinal" style={{ marginTop: '10px', color: '#4CAF50' }}>
+          PROYECTO FINAL
+        </Link>
       </header>
     </div>
   );
@@ -59,9 +101,7 @@ function LoginScreen({ onLoginSuccess }) {
     script.onload = () => setIsScriptLoaded(true);
     document.body.appendChild(script);
 
-    return () => {
-      // Limpieza opcional (no eliminar el script porque podría afectar otras cosas)
-    };
+    return () => {};
   }, []);
 
   const handleGoogleLogin = () => {
@@ -114,7 +154,7 @@ function LoginScreen({ onLoginSuccess }) {
           LINKED IN DE MI PROFILE
         </a>
         
-        {/* Botón moderno de Google (puedes usar un div estilizado) */}
+        {/* Botón de Google */}
         <div style={{ marginTop: '20px' }}>
           <button
             onClick={handleGoogleLogin}
@@ -165,7 +205,6 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('google_user');
-    // Opcional: también revocar token si se quiere
   };
 
   return (
@@ -177,6 +216,7 @@ function App() {
           <Route path="/" element={<Home user={user} onLogout={handleLogout} />} />
           <Route path="/descargas" element={<Descargas />} />
           <Route path="/documentacion2" element={<Documentacion2 />} />
+          <Route path="/proyectofinal" element={<ProyectoFinal />} />
         </Routes>
       )}
     </Router>
